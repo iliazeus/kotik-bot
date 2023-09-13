@@ -2,6 +2,7 @@ import { Api, Chat, Message, Update, User } from "./api";
 
 export interface State {
   adminUsernames: string[];
+  password: string;
   chatIds: (number | string)[];
   photoFileIds: string[];
   periodMinutes: number;
@@ -37,6 +38,21 @@ export class Bot {
     }
 
     if (message && message?.chat.id === message?.from?.id) {
+      if (message.text === "/password " + this.state.password) {
+        if (!message.from?.username) return;
+
+        if (!this.state.adminUsernames.includes(message.from.username)) {
+          this.state.adminUsernames.push(message.from.username);
+          await this.reply(message, `You are now one of the bot's admins!`);
+
+          void this.onStateChange?.(this.state);
+          return;
+        } else {
+          await this.reply(message, `You are already one of the bot's admins!`);
+          return;
+        }
+      }
+
       if (!this.state.adminUsernames.includes(message.from?.username!)) {
         await this.reply(message, `You are not one of the bot's admins!`);
         return;

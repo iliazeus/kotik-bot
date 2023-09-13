@@ -2,7 +2,6 @@ import { Api, Chat, Message, Update, User } from "./api";
 
 export interface State {
   adminUsernames: string[];
-  password: string;
   chatIds: (number | string)[];
   photoFileIds: string[];
   periodMinutes: number;
@@ -15,6 +14,7 @@ export class Bot {
   constructor(
     private api: Api,
     private state: State,
+    private password: string,
   ) {}
 
   log = (message: unknown) => {
@@ -38,7 +38,7 @@ export class Bot {
     }
 
     if (message && message?.chat.id === message?.from?.id) {
-      if (message.text === "/password " + this.state.password) {
+      if (message.text === "/password " + this.password) {
         if (!message.from?.username) return;
 
         if (!this.state.adminUsernames.includes(message.from.username)) {

@@ -8,7 +8,8 @@ services:
   bot:
     build: .
     volumes:
-      - ./state.json:/app/state.json
+      - ./state.json:/app/state.json:rw
+      - ./.env:/app/.env:ro
     networks:
       - external
     deploy:

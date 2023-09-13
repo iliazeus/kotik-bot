@@ -1,0 +1,18 @@
+version: "3"
+
+networks:
+  external:
+    external: true
+
+services:
+  bot:
+    build: .
+    volumes:
+      - ./state.json:/app/state.json
+    networks:
+      - external
+    deploy:
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 32M

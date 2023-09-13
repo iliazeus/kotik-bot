@@ -1,4 +1,4 @@
-import { Api, Chat, Message, Update, User } from "./api";
+import { Api, Message, Update } from "./api";
 
 export interface State {
   adminUsernames: string[];
@@ -33,6 +33,7 @@ export class Bot {
         this.state.chatIds.push(my_chat_member.chat.id);
       }
 
+      this.startTimer();
       void this.onStateChange?.(this.state);
       return;
     }
@@ -131,24 +132,29 @@ export class Bot {
   }
 
   private async tick(): Promise<void> {
-    try {
-      if (this.state.photoFileIds.length === 0) {
-        this.timer = null;
-        return;
-      }
-
-      const photo = this.state.photoFileIds[0];
-      for (const chat_id of this.state.chatIds) {
-        await this.api.sendPhoto({ chat_id, photo });
-      }
-
-      this.state.photoFileIds.shift();
-      void this.onStateChange?.(this.state);
-
-      this.timer = setTimeout(() => void this.tick(), this.state.periodMinutes * 60 * 1000);
-    } catch (error) {
-      this.log(error);
+    if (this.state.photoFileIds.length === 0) {
+      this.timer = null;
+      return;
     }
+
+    if (this.state.chatIds.length === 0) {
+      this.timer = null;
+      return;
+    }
+
+    const photo = this.state.photoFileIds[0];
+    for (const chat_id of this.state.chatIds) {
+      try {
+        await this.api.sendPhoto({ chat_id, photo });
+      } catch (error) {
+        this.log(error);
+      }
+    }
+
+    this.state.photoFileIds.shift();
+    void this.onStateChange?.(this.state);
+
+    this.timer = setTimeout(() => void this.tick(), this.state.periodMinutes * 60 * 1000);
   }
 
   private async reply(message: Message, text: string): Promise<void> {

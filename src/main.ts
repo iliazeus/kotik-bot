@@ -2,7 +2,7 @@ import "dotenv/config";
 
 import * as fs from "node:fs/promises";
 
-import { Api, Update } from "./api";
+import { Api } from "./api";
 import { Bot } from "./bot";
 
 main().catch((error) => {

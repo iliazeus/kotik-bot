@@ -31,6 +31,7 @@ export interface Message {
   edit_date?: number;
   text?: string;
   photo?: PhotoSize[];
+  video?: Video;
 }
 
 export interface PhotoSize {
@@ -38,6 +39,18 @@ export interface PhotoSize {
   file_unique_id: string;
   width: number;
   height: number;
+  file_size?: number;
+}
+
+export interface Video {
+  file_id: string;
+  file_unique_id: string;
+  width: number;
+  height: number;
+  duration: number;
+  thumbnail?: PhotoSize;
+  file_name?: string;
+  mime_type?: string;
   file_size?: number;
 }
 
@@ -97,6 +110,15 @@ export class Api {
     caption?: string;
   }): Promise<Message> {
     return await this.request("sendPhoto", req);
+  }
+
+  async sendVideo(req: {
+    chat_id: number | string;
+    message_thread_id?: number;
+    video: string;
+    caption?: string;
+  }): Promise<Message> {
+    return await this.request("sendVideo", req);
   }
 
   constructor(readonly token: string) {}

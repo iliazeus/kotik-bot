@@ -3,7 +3,7 @@ import { Api, Message, Update } from "./api";
 export interface State {
   adminUsernames: string[];
   chatIds: (number | string)[];
-  photoFileIds: string[];
+  schedule: Array<{ type: "photo" | "video"; fileId: string }>;
   periodMinutes: number;
 }
 
@@ -72,11 +72,24 @@ export class Bot {
       }
 
       if (message.photo) {
-        const newPhotoFileId = message.photo[0].file_id;
+        const fileId = message.photo[0].file_id;
 
-        if (!this.state.photoFileIds.includes(newPhotoFileId)) {
-          this.state.photoFileIds.push(newPhotoFileId);
+        const scheduledIds = this.state.schedule.map((x) => x.fileId);
+        if (!scheduledIds.includes(fileId)) {
+          this.state.schedule.push({ type: "photo", fileId });
+          void this.onStateChange?.(this.state);
+          void this.startTimer();
+        }
 
+        return;
+      }
+
+      if (message.video) {
+        const fileId = message.video.file_id;
+
+        const scheduledIds = this.state.schedule.map((x) => x.fileId);
+        if (!scheduledIds.includes(fileId)) {
+          this.state.schedule.push({ type: "video", fileId });
           void this.onStateChange?.(this.state);
           void this.startTimer();
         }
@@ -132,7 +145,7 @@ export class Bot {
   }
 
   private async tick(): Promise<void> {
-    if (this.state.photoFileIds.length === 0) {
+    if (this.state.schedule.length === 0) {
       this.timer = null;
       return;
     }
@@ -142,16 +155,23 @@ export class Bot {
       return;
     }
 
-    const photo = this.state.photoFileIds[0];
+    const { type, fileId } = this.state.schedule[0];
     for (const chat_id of this.state.chatIds) {
       try {
-        await this.api.sendPhoto({ chat_id, photo });
+        switch (type) {
+          case "photo":
+            await this.api.sendPhoto({ chat_id, photo: fileId });
+            break;
+          case "video":
+            await this.api.sendVideo({ chat_id, video: fileId });
+            break;
+        }
       } catch (error) {
         this.log(error);
       }
     }
 
-    this.state.photoFileIds.shift();
+    this.state.schedule.shift();
     void this.onStateChange?.(this.state);
 
     this.timer = setTimeout(() => void this.tick(), this.state.periodMinutes * 60 * 1000);

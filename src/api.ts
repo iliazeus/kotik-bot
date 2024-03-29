@@ -125,6 +125,7 @@ export class Api {
     this.log(`${method} REQ ${JSON.stringify(req)}`);
 
     const response = await fetch(`https://api.telegram.org/bot${this.token}/${method}`, {
+      method: 'post',
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(req),
     });

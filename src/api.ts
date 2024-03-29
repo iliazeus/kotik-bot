@@ -1,5 +1,3 @@
-import axios from "axios";
-
 export interface Chat {
   id: number;
   type: "private" | "group" | "supergroup" | "channel";
@@ -122,21 +120,22 @@ export class Api {
   }
 
   constructor(readonly token: string) {}
-  readonly axios = axios.create();
 
   private async request<TReq, TRes>(method: string, req: TReq): Promise<TRes> {
     this.log(`${method} REQ ${JSON.stringify(req)}`);
 
-    const response = await this.axios.post<Response<TRes>>(
-      `https://api.telegram.org/bot${this.token}/${method}`,
-      req,
-    );
+    const response = await fetch(`https://api.telegram.org/bot${this.token}/${method}`, {
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req),
+    });
 
-    const res = response.data;
-    this.log(`${method} RES ${JSON.stringify(res)}`);
+    if (!response.ok) throw new ApiError(await response.json());
 
-    if (!res.ok) throw new ApiError(res);
-    return res.result;
+    const data = await response.json();
+    this.log(`${method} RES ${JSON.stringify(data)}`);
+
+    if (!data.ok) throw new ApiError(data);
+    return data.result;
   }
 
   private log = (message: unknown) => {

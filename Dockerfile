@@ -8,4 +8,4 @@ RUN ./scripts/build.sh
 FROM gcr.io/distroless/nodejs20-debian12
 WORKDIR /app
 COPY --from=build /app/dist/main.js ./main.js
-CMD ["./main.js"]
+CMD ["/app/main.js"]
